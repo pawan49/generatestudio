@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PassPort Studio — Instant Passport Photos</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/bundle.umd.js"></script>
 <style>
   :root {
     --ink: #0d0d0d;
@@ -867,7 +866,9 @@
 
 </main>
 
-<script>
+<script type="module">
+  import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.7.0?bundle';
+
   // State
   let originalFile = null;
   let processedBlob = null;
@@ -966,10 +967,11 @@
     hideStatus();
     setStep(2);
 
+    let progInterval = null;
     try {
       // Simulate progress for UX
       let prog = 0;
-      const progInterval = setInterval(() => {
+      progInterval = setInterval(() => {
         prog = Math.min(prog + Math.random() * 8, 85);
         progressBar.style.width = prog + '%';
         if (prog < 30) progressLabel.textContent = 'Downloading AI model...';
@@ -977,9 +979,12 @@
         else progressLabel.textContent = 'Removing background...';
       }, 400);
 
-      const { removeBackground } = window.ImglyBackgroundRemoval;
-      const blob = await removeBackground(originalFile);
-      
+      const blob = await removeBackground(originalFile, {
+        progress: (_key, current, total) => {
+          if (total > 0) progressBar.style.width = Math.min(85, (current / total) * 85) + '%';
+        },
+      });
+
       clearInterval(progInterval);
       progressBar.style.width = '100%';
       progressLabel.textContent = 'Done!';
@@ -1000,7 +1005,12 @@
 
     } catch (err) {
       console.error(err);
-      showStatus('Background removal failed. Try a clearer photo or check your connection.', 'error');
+      if (progInterval) clearInterval(progInterval);
+      const detail = err && err.message ? String(err.message) : '';
+      const hint = detail.includes('publicPath') || detail.includes('fetch')
+        ? ' Check your network; the first run downloads a large AI model.'
+        : ' Try a clearer photo or check your connection.';
+      showStatus('Background removal failed.' + hint + (detail ? ' (' + detail.slice(0, 120) + ')' : ''), 'error');
       progressWrap.classList.remove('show');
       removeBgBtn.disabled = false;
     }
