@@ -25,7 +25,11 @@
     color: var(--ink);
     font-family: 'DM Sans', sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   /* Grain overlay */
@@ -40,10 +44,14 @@
   }
 
   header {
-    padding: 2rem 3rem;
+    padding: 2rem clamp(1rem, 4vw, 3rem);
+    padding-left: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-left, 0px));
+    padding-right: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-right, 0px));
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
     border-bottom: 1px solid rgba(0,0,0,0.1);
     background: var(--ink);
     position: relative;
@@ -100,7 +108,8 @@
   main {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 3rem 2rem 5rem;
+    padding: 3rem clamp(1rem, 4vw, 2rem) 5rem;
+    width: 100%;
   }
 
   .hero {
@@ -134,18 +143,21 @@
 
   .hero p {
     color: var(--muted);
-    font-size: 1.05rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.05rem);
     max-width: 480px;
     margin: 0 auto;
     line-height: 1.7;
+    padding: 0 0.25rem;
   }
 
   /* Steps */
   .steps-row {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 0;
     margin-bottom: 3rem;
+    width: 100%;
   }
 
   .step {
@@ -196,8 +208,8 @@
   /* Upload Zone */
   .workspace {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 3vw, 2rem);
     margin-bottom: 2.5rem;
   }
 
@@ -240,8 +252,8 @@
   .panel-badge.gold { background: var(--gold); color: var(--ink); }
 
   .panel-body {
-    padding: 1.5rem;
-    min-height: 320px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    min-height: clamp(220px, 45vh, 320px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -251,7 +263,8 @@
   /* Upload area */
   .upload-area {
     width: 100%;
-    height: 280px;
+    height: clamp(200px, 42vw, 280px);
+    min-height: 200px;
     border: 2px dashed rgba(0,0,0,0.15);
     border-radius: 4px;
     display: flex;
@@ -313,7 +326,8 @@
   /* Preview images */
   .preview-wrap {
     width: 100%;
-    height: 280px;
+    height: clamp(200px, 42vw, 280px);
+    min-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -322,7 +336,7 @@
 
   .preview-img {
     max-width: 100%;
-    max-height: 280px;
+    max-height: clamp(200px, 42vw, 280px);
     object-fit: contain;
     border-radius: 2px;
   }
@@ -332,7 +346,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.4rem;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding: 1rem clamp(1rem, 3vw, 1.4rem);
     background: var(--cream);
     border-top: 1px solid rgba(0,0,0,0.08);
   }
@@ -373,15 +389,15 @@
     background: var(--white);
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 4px;
-    padding: 1.5rem 2rem;
+    padding: clamp(1.1rem, 3vw, 1.5rem) clamp(1rem, 3vw, 2rem);
     box-shadow: var(--shadow);
     margin-bottom: 2rem;
   }
 
   .controls-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: clamp(1rem, 2.5vw, 1.5rem);
     margin-bottom: 1.5rem;
   }
 
@@ -433,12 +449,13 @@
   /* Buttons */
   .btn-row {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem 1rem;
     flex-wrap: wrap;
   }
 
   .btn {
-    padding: 0.8rem 1.8rem;
+    padding: 0.85rem 1.25rem;
+    min-height: 48px;
     border-radius: 3px;
     font-family: 'DM Mono', monospace;
     font-size: 0.75rem;
@@ -496,7 +513,11 @@
     gap: 1rem;
   }
 
-  .progress-wrap.show { display: flex; }
+  .progress-wrap.show {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 
   .progress-bar-bg {
     flex: 1;
@@ -516,11 +537,17 @@
 
   .progress-label {
     font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
+    font-size: clamp(0.58rem, 1.8vw, 0.65rem);
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--muted);
     white-space: nowrap;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  @media (min-width: 480px) {
+    .progress-label { flex: 0 1 auto; }
   }
 
   /* Output — Passport Sheet */
@@ -529,17 +556,21 @@
     background: var(--white);
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 4px;
-    padding: 2rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
     box-shadow: var(--shadow);
     margin-top: 2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .output-section.show { display: block; }
 
   .output-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -547,21 +578,23 @@
 
   .output-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
     font-weight: 700;
+    line-height: 1.2;
   }
 
   .passport-sheet {
     background: #fff;
     border: 1px solid #ddd;
-    display: inline-block;
-    padding: 12px;
+    padding: clamp(8px, 2vw, 12px);
     margin: 0 auto 1.5rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    max-width: 500px;
+    gap: clamp(6px, 1.5vw, 8px);
+    max-width: min(500px, 100%);
+    width: 100%;
     justify-content: center;
+    box-sizing: border-box;
   }
 
   .passport-photo-cell {
@@ -650,12 +683,198 @@
     transform: translate(-50%, -60%);
   }
 
-  /* Responsive */
-  @media (max-width: 700px) {
-    header { padding: 1.2rem 1.5rem; }
-    .workspace { grid-template-columns: 1fr; }
-    main { padding: 2rem 1rem 4rem; }
-    .hero h1 { font-size: 2rem; }
+  /* —— Tablet (narrow / portrait) —— */
+  @media (max-width: 900px) {
+    .workspace {
+      grid-template-columns: 1fr;
+    }
+
+    .info-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .info-card {
+      min-width: 0;
+    }
+  }
+
+  /* —— Mobile & small tablet —— */
+  @media (max-width: 640px) {
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 1.25rem;
+      padding-bottom: 1.25rem;
+    }
+
+    .header-tag {
+      max-width: 100%;
+      font-size: 0.6rem;
+      letter-spacing: 1.5px;
+      line-height: 1.4;
+    }
+
+    .brand-name {
+      font-size: clamp(1.15rem, 5vw, 1.5rem);
+    }
+
+    .hero {
+      margin-bottom: 2.25rem;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+    }
+
+    main {
+      padding-top: 2rem;
+      padding-bottom: 4rem;
+    }
+
+    /* Horizontal scroll for steps — keeps all 4 visible without crushing */
+    .steps-row {
+      justify-content: flex-start;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      margin-left: max(-1rem, calc(-1 * env(safe-area-inset-left, 0px)));
+      margin-right: max(-1rem, calc(-1 * env(safe-area-inset-right, 0px)));
+      padding-left: max(1rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1rem, env(safe-area-inset-right, 0px));
+      padding-bottom: 0.35rem;
+      margin-bottom: 2rem;
+      flex-wrap: nowrap;
+    }
+
+    .steps-row::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .steps-row::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }
+
+    .step {
+      flex-shrink: 0;
+      padding: 0.45rem 0.85rem;
+    }
+
+    .step span {
+      white-space: nowrap;
+    }
+
+    .step-divider {
+      width: 28px;
+      flex-shrink: 0;
+    }
+
+    .info-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .panel-header {
+      padding: 0.85rem 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .panel-body {
+      min-height: clamp(200px, 38vh, 280px);
+    }
+
+    .upload-area,
+    .preview-wrap {
+      height: clamp(200px, 38vh, 260px);
+    }
+
+    .preview-img {
+      max-height: clamp(200px, 38vh, 260px);
+    }
+
+    #resultPlaceholder {
+      min-height: 200px;
+      height: auto !important;
+    }
+
+    .btn-row {
+      flex-direction: column;
+    }
+
+    .btn-row .btn {
+      width: 100%;
+      flex: none;
+    }
+
+    .progress-wrap.show {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .progress-wrap.show .progress-bar-bg {
+      order: 2;
+      width: 100%;
+    }
+
+    .progress-wrap.show .progress-label {
+      order: 1;
+      white-space: normal;
+    }
+
+    .progress-wrap.show .spinner {
+      order: 0;
+      align-self: center;
+    }
+
+    .output-actions {
+      flex-direction: column;
+    }
+
+    .output-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .status-msg {
+      font-size: 0.68rem;
+      word-break: break-word;
+    }
+  }
+
+  /* —— Very small phones —— */
+  @media (max-width: 380px) {
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.1rem;
+    }
+
+    .step {
+      font-size: 0.62rem;
+      padding: 0.4rem 0.65rem;
+    }
+
+    .step-num {
+      width: 20px;
+      height: 20px;
+      font-size: 0.6rem;
+    }
+
+    .swatch {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  /* —— Large desktop —— */
+  @media (min-width: 1200px) {
+    main {
+      max-width: 1140px;
+    }
   }
 
   /* Loading spinner */
@@ -1060,14 +1279,21 @@
     const sy = (hPx - sh) / 2;
     ctx.drawImage(srcImg, sx, sy, sw, sh);
 
-    // Preview sheet (scaled down for display)
-    const displayScale = 100 / wPx;
+    // Preview sheet (scaled down for display — fits phone / tablet / desktop)
+    const colsPreview = count <= 4 ? 2 : 3;
+    const sheetPad = 40;
+    const gapPreview = 8;
+    const mainEl = document.querySelector('main');
+    const layoutW = mainEl ? mainEl.getBoundingClientRect().width : window.innerWidth;
+    const availW = Math.min(500, Math.max(240, layoutW - sheetPad));
+    const previewCellW = Math.max(56, Math.min(100, Math.floor((availW - gapPreview * (colsPreview - 1) - 24) / colsPreview)));
+    const previewCellH = Math.round(previewCellW * (hPx / wPx));
     passportSheet.innerHTML = '';
     for (let i = 0; i < count; i++) {
       const cell = document.createElement('div');
       cell.className = 'passport-photo-cell';
-      cell.style.width = '100px';
-      cell.style.height = Math.round(hPx * displayScale) + 'px';
+      cell.style.width = previewCellW + 'px';
+      cell.style.height = previewCellH + 'px';
       const img = document.createElement('img');
       img.src = singleCanvas.toDataURL('image/' + format, 0.95);
       cell.appendChild(img);
