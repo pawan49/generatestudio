@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PassPort Studio — Instant Passport Photos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/bundle.umd.js"></script>
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --gold: #c9a84c;
+    --gold-light: #e8cc7a;
+    --red: #c0392b;
+    --muted: #7a7468;
+    --white: #ffffff;
+    --shadow: 0 8px 40px rgba(0,0,0,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  header {
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    background: var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: var(--ink);
+    letter-spacing: -1px;
+  }
+
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--paper);
+    letter-spacing: 1px;
+  }
+
+  .brand-name span { color: var(--gold); }
+
+  .header-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.35rem 0.8rem;
+    border-radius: 2px;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--gold);
+    position: relative;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Steps */
+  .steps-row {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 3rem;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .step.active { color: var(--gold); }
+  .step.done { color: var(--ink); }
+
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step.active .step-num {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  .step.done .step-num {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--white);
+  }
+
+  .step-divider {
+    width: 40px;
+    height: 1px;
+    background: rgba(0,0,0,0.15);
+    align-self: center;
+  }
+
+  /* Upload Zone */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .panel {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .panel-header {
+    padding: 1rem 1.4rem;
+    background: var(--cream);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  .panel-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    background: var(--ink);
+    color: var(--paper);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .panel-badge.gold { background: var(--gold); color: var(--ink); }
+
+  .panel-body {
+    padding: 1.5rem;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Upload area */
+  .upload-area {
+    width: 100%;
+    height: 280px;
+    border: 2px dashed rgba(0,0,0,0.15);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    gap: 1rem;
+    background: var(--cream);
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .upload-area input {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+
+  .upload-icon {
+    width: 52px; height: 52px;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    color: var(--muted);
+    transition: all 0.25s;
+  }
+
+  .upload-area:hover .upload-icon {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .upload-text {
+    text-align: center;
+  }
+
+  .upload-text strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+
+  .upload-text span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Preview images */
+  .preview-wrap {
+    width: 100%;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .preview-img {
+    max-width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: 2px;
+  }
+
+  /* BG color picker */
+  .bg-picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.4rem;
+    background: var(--cream);
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .bg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+  }
+
+  .color-swatches {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.active { border-color: var(--ink); }
+
+  .swatch-white { background: #ffffff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2); }
+  .swatch-blue { background: #c8d8f0; }
+  .swatch-gray { background: #e0e0e0; }
+  .swatch-navy { background: #1a2b4a; }
+
+  /* Controls */
+  .controls {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px;
+    padding: 1.5rem 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ctrl-group label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .ctrl-group select, .ctrl-group input[type="number"] {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 3px;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .ctrl-group select:focus, .ctrl-group input:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.8rem 1.8rem;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.22s;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    flex: 1;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--gold);
+    color: var(--ink);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid rgba(0,0,0,0.2);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .btn-gold {
+    background: var(--gold);
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .btn-gold:hover:not(:disabled) {
+    background: var(--gold-light);
+  }
+
+  .btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    display: none;
+    margin-top: 1rem;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .progress-wrap.show { display: flex; }
+
+  .progress-bar-bg {
+    flex: 1;
+    height: 3px;
+    background: var(--cream);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Output — Passport Sheet */
+  .output-section {
+    display: none;
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-top: 2rem;
+  }
+
+  .output-section.show { display: block; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .output-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .passport-sheet {
+    background: #fff;
+    border: 1px solid #ddd;
+    display: inline-block;
+    padding: 12px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 500px;
+    justify-content: center;
+  }
+
+  .passport-photo-cell {
+    border: 1px solid #ccc;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .passport-photo-cell img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* Info strip */
+  .info-strip {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .info-card {
+    flex: 1;
+    min-width: 160px;
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .info-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .info-card-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  /* Status message */
+  .status-msg {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.6rem 1rem;
+    border-radius: 3px;
+    margin-top: 0.8rem;
+    display: none;
+  }
+
+  .status-msg.show { display: block; }
+  .status-msg.error { background: #fef2f2; color: #c0392b; border: 1px solid #fca5a5; }
+  .status-msg.info { background: #f0f9ff; color: #0369a1; border: 1px solid #93c5fd; }
+
+  /* Photo overlay guide */
+  .guide-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .guide-oval {
+    width: 60px; height: 80px;
+    border: 2px dashed var(--gold);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    header { padding: 1.2rem 1.5rem; }
+    .workspace { grid-template-columns: 1fr; }
+    main { padding: 2rem 1rem 4rem; }
+    .hero h1 { font-size: 2rem; }
+  }
+
+  /* Loading spinner */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+
+  .spinner.show { display: block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Fade in */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">PS</div>
+    <div class="brand-name">Pass<span>Port</span> Studio</div>
+  </div>
+  <div class="header-tag">AI Background Removal · Instant Photos</div>
+</header>
+
+<main>
+
+  <div class="hero fade-in">
+    <div class="hero-eyebrow">✦ Professional · Instant · Precise</div>
+    <h1>Passport Photos<br>in <em>Seconds</em></h1>
+    <p>Upload your photo, remove the background with AI, and generate print-ready passport-size photos — all in your browser.</p>
+  </div>
+
+  <div class="steps-row fade-in" style="animation-delay:0.1s">
+    <div class="step active" id="step1"><div class="step-num">1</div><span>Upload</span></div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2"><div class="step-num">2</div><span>Remove BG</span></div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3"><div class="step-num">3</div><span>Generate</span></div>
+    <div class="step-divider"></div>
+    <div class="step" id="step4"><div class="step-num">4</div><span>Download</span></div>
+  </div>
+
+  <div class="info-strip fade-in" style="animation-delay:0.15s">
+    <div class="info-card">
+      <div class="info-card-label">Processing</div>
+      <div class="info-card-val">Browser-only</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Privacy</div>
+      <div class="info-card-val">100% Local</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Formats</div>
+      <div class="info-card-val">JPG · PNG</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Standard</div>
+      <div class="info-card-val">35×45 mm</div>
+    </div>
+  </div>
+
+  <div class="workspace fade-in" style="animation-delay:0.2s">
+    <!-- Upload panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Original Photo</span>
+        <span class="panel-badge">Step 01</span>
+      </div>
+      <div class="panel-body">
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">
+            <strong>Drop photo here</strong>
+            <span>JPG, PNG, WEBP · Max 10 MB</span>
+          </div>
+        </div>
+        <div class="preview-wrap" id="originalWrap" style="display:none">
+          <img id="originalImg" class="preview-img" alt="Original">
+        </div>
+      </div>
+    </div>
+
+    <!-- Result panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Background Removed</span>
+        <span class="panel-badge gold">AI Result</span>
+      </div>
+      <div class="panel-body" id="resultBody" style="position:relative">
+        <!-- Checkerboard placeholder -->
+        <div id="resultPlaceholder" style="width:100%;height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;background:repeating-conic-gradient(#e8e4dc 0% 25%, #d4d0c8 0% 50%) 0 0 / 16px 16px;border-radius:4px;opacity:0.4">
+          <span style="font-family:'DM Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#7a7468;background:rgba(255,255,255,0.8);padding:0.4rem 0.8rem;border-radius:2px">Awaiting AI processing</span>
+        </div>
+        <div class="preview-wrap" id="resultWrap" style="display:none">
+          <div style="position:relative">
+            <div style="position:absolute;inset:0;background:repeating-conic-gradient(#ccc 0% 25%,#fff 0% 50%) 0 0/12px 12px;border-radius:2px;z-index:0"></div>
+            <img id="resultImg" class="preview-img" alt="No BG" style="position:relative;z-index:1">
+          </div>
+        </div>
+      </div>
+      <div class="bg-picker-row">
+        <span class="bg-label">Background Color</span>
+        <div class="color-swatches">
+          <div class="swatch swatch-white active" data-color="#ffffff" title="White"></div>
+          <div class="swatch swatch-blue" data-color="#c8d8f0" title="Passport Blue"></div>
+          <div class="swatch swatch-gray" data-color="#e0e0e0" title="Light Gray"></div>
+          <div class="swatch swatch-navy" data-color="#1a2b4a" title="Navy"></div>
+          <input type="color" id="customColor" value="#ffffff" title="Custom" style="width:22px;height:22px;border-radius:50%;cursor:pointer;border:none;padding:0;background:none;overflow:hidden">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls fade-in" style="animation-delay:0.25s">
+    <div class="controls-grid">
+      <div class="ctrl-group">
+        <label>Passport Standard</label>
+        <div class="select-wrap">
+          <select id="standardSelect">
+            <option value="35x45">India / UK — 35 × 45 mm</option>
+            <option value="51x51">USA — 51 × 51 mm (2×2 in)</option>
+            <option value="35x35">EU Schengen — 35 × 35 mm</option>
+            <option value="40x60">China — 40 × 60 mm</option>
+            <option value="40x40">Canada — 40 × 40 mm</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Photos per Sheet</label>
+        <div class="select-wrap">
+          <select id="countSelect">
+            <option value="4">4 photos</option>
+            <option value="6">6 photos</option>
+            <option value="8">8 photos</option>
+            <option value="2">2 photos</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Output DPI</label>
+        <div class="select-wrap">
+          <select id="dpiSelect">
+            <option value="300">300 DPI (Print)</option>
+            <option value="150">150 DPI (Screen)</option>
+            <option value="600">600 DPI (High Res)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Output Format</label>
+        <div class="select-wrap">
+          <select id="formatSelect">
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG (transparent)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="removeBgBtn" disabled>⚡ Remove Background</button>
+      <button class="btn btn-gold" id="generateBtn" disabled>🖨 Generate Passport Photos</button>
+      <button class="btn btn-secondary" id="resetBtn">↺ Reset</button>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="spinner show" id="spinner"></div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Initializing AI...</div>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <!-- Output -->
+  <div class="output-section" id="outputSection">
+    <div class="output-header">
+      <div class="output-title">Your Passport Photos</div>
+      <span class="panel-badge gold" id="sheetLabel">Ready to Print</span>
+    </div>
+    <div style="text-align:center">
+      <div class="passport-sheet" id="passportSheet"></div>
+    </div>
+    <div class="output-actions">
+      <button class="btn btn-primary" id="downloadBtn">⬇ Download Sheet</button>
+      <button class="btn btn-secondary" id="downloadSingleBtn">⬇ Download Single Photo</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // State
+  let originalFile = null;
+  let processedBlob = null;
+  let bgColor = '#ffffff';
+
+  // DOM refs
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const originalWrap = document.getElementById('originalWrap');
+  const originalImg = document.getElementById('originalImg');
+  const resultWrap = document.getElementById('resultWrap');
+  const resultImg = document.getElementById('resultImg');
+  const resultPlaceholder = document.getElementById('resultPlaceholder');
+  const removeBgBtn = document.getElementById('removeBgBtn');
+  const generateBtn = document.getElementById('generateBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressLabel = document.getElementById('progressLabel');
+  const statusMsg = document.getElementById('statusMsg');
+  const outputSection = document.getElementById('outputSection');
+  const passportSheet = document.getElementById('passportSheet');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadSingleBtn = document.getElementById('downloadSingleBtn');
+
+  // Steps
+  function setStep(n) {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step' + i);
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      if (i === n) el.classList.add('active');
+    }
+  }
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) { showStatus('Please upload an image file.', 'error'); return; }
+    if (file.size > 10 * 1024 * 1024) { showStatus('File too large. Max 10 MB.', 'error'); return; }
+    originalFile = file;
+    const url = URL.createObjectURL(file);
+    originalImg.src = url;
+    uploadArea.style.display = 'none';
+    originalWrap.style.display = 'flex';
+    removeBgBtn.disabled = false;
+    generateBtn.disabled = true;
+    processedBlob = null;
+    resultWrap.style.display = 'none';
+    resultPlaceholder.style.display = 'flex';
+    outputSection.classList.remove('show');
+    hideStatus();
+    setStep(1);
+  }
+
+  // Background color swatches
+  document.querySelectorAll('.swatch').forEach(s => {
+    s.addEventListener('click', () => {
+      document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+      bgColor = s.dataset.color;
+      if (processedBlob) updatePreviewBg();
+    });
+  });
+
+  document.getElementById('customColor').addEventListener('input', e => {
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+    bgColor = e.target.value;
+    if (processedBlob) updatePreviewBg();
+  });
+
+  function updatePreviewBg() {
+    // Preview bg is always checkerboard; actual bg applied on generate
+  }
+
+  // Remove BG
+  removeBgBtn.addEventListener('click', async () => {
+    if (!originalFile) return;
+    removeBgBtn.disabled = true;
+    generateBtn.disabled = true;
+    progressWrap.classList.add('show');
+    progressBar.style.width = '0%';
+    progressLabel.textContent = 'Loading AI model...';
+    hideStatus();
+    setStep(2);
+
+    try {
+      // Simulate progress for UX
+      let prog = 0;
+      const progInterval = setInterval(() => {
+        prog = Math.min(prog + Math.random() * 8, 85);
+        progressBar.style.width = prog + '%';
+        if (prog < 30) progressLabel.textContent = 'Downloading AI model...';
+        else if (prog < 60) progressLabel.textContent = 'Analysing image...';
+        else progressLabel.textContent = 'Removing background...';
+      }, 400);
+
+      const { removeBackground } = window.ImglyBackgroundRemoval;
+      const blob = await removeBackground(originalFile);
+      
+      clearInterval(progInterval);
+      progressBar.style.width = '100%';
+      progressLabel.textContent = 'Done!';
+
+      processedBlob = blob;
+      const url = URL.createObjectURL(blob);
+      resultImg.src = url;
+      resultPlaceholder.style.display = 'none';
+      resultWrap.style.display = 'flex';
+      generateBtn.disabled = false;
+      showStatus('Background removed! Now generate your passport photos.', 'info');
+      setStep(3);
+
+      setTimeout(() => {
+        progressWrap.classList.remove('show');
+        progressBar.style.width = '0%';
+      }, 1500);
+
+    } catch (err) {
+      console.error(err);
+      showStatus('Background removal failed. Try a clearer photo or check your connection.', 'error');
+      progressWrap.classList.remove('show');
+      removeBgBtn.disabled = false;
+    }
+  });
+
+  // Generate passport photos
+  generateBtn.addEventListener('click', async () => {
+    if (!processedBlob) return;
+    setStep(3);
+    generateBtn.disabled = true;
+    showStatus('Generating passport sheet...', 'info');
+
+    const standard = document.getElementById('standardSelect').value;
+    const count = parseInt(document.getElementById('countSelect').value);
+    const dpi = parseInt(document.getElementById('dpiSelect').value);
+    const format = document.getElementById('formatSelect').value;
+
+    const sizes = {
+      '35x45': [35, 45],
+      '51x51': [51, 51],
+      '35x35': [35, 35],
+      '40x60': [40, 60],
+      '40x40': [40, 40],
+    };
+    const [wMm, hMm] = sizes[standard];
+    const mmToPx = dpi / 25.4;
+    const wPx = Math.round(wMm * mmToPx);
+    const hPx = Math.round(hMm * mmToPx);
+
+    // Draw single photo on canvas with background
+    const srcImg = new Image();
+    srcImg.src = URL.createObjectURL(processedBlob);
+    await new Promise(r => srcImg.onload = r);
+
+    const singleCanvas = document.createElement('canvas');
+    singleCanvas.width = wPx;
+    singleCanvas.height = hPx;
+    const ctx = singleCanvas.getContext('2d');
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, wPx, hPx);
+
+    // Scale to fit maintaining aspect ratio
+    const scale = Math.min(wPx / srcImg.width, hPx / srcImg.height);
+    const sw = srcImg.width * scale;
+    const sh = srcImg.height * scale;
+    const sx = (wPx - sw) / 2;
+    const sy = (hPx - sh) / 2;
+    ctx.drawImage(srcImg, sx, sy, sw, sh);
+
+    // Preview sheet (scaled down for display)
+    const displayScale = 100 / wPx;
+    passportSheet.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'passport-photo-cell';
+      cell.style.width = '100px';
+      cell.style.height = Math.round(hPx * displayScale) + 'px';
+      const img = document.createElement('img');
+      img.src = singleCanvas.toDataURL('image/' + format, 0.95);
+      cell.appendChild(img);
+      passportSheet.appendChild(cell);
+    }
+
+    // Sheet canvas for download
+    const cols = count <= 4 ? 2 : 3;
+    const rows = Math.ceil(count / cols);
+    const gap = Math.round(3 * mmToPx);
+    const sheetCanvas = document.createElement('canvas');
+    sheetCanvas.width = cols * wPx + (cols + 1) * gap;
+    sheetCanvas.height = rows * hPx + (rows + 1) * gap;
+    const sctx = sheetCanvas.getContext('2d');
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+
+    for (let i = 0; i < count; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = gap + col * (wPx + gap);
+      const y = gap + row * (hPx + gap);
+      sctx.drawImage(singleCanvas, x, y, wPx, hPx);
+    }
+
+    downloadBtn.onclick = () => {
+      const a = document.createElement('a');
+      a.href = sheetCanvas.toDataURL('image/' + format, 0.95);
+      a.download = `passport-sheet-${wMm}x${hMm}mm.${format === 'jpeg' ? 'jpg' : 'png'}`;
+      a.click();
+    };
+
+    downloadSingleBtn.onclick = () => {
+      const a = document.createElement('a');
+      a.href = singleCanvas.toDataURL('image/' + format, 0.95);
+      a.download = `passport-photo-${wMm}x${hMm}mm.${format === 'jpeg' ? 'jpg' : 'png'}`;
+      a.click();
+    };
+
+    document.getElementById('sheetLabel').textContent = `${count} × ${wMm}×${hMm}mm | ${dpi} DPI`;
+    outputSection.classList.add('show');
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showStatus(`✓ ${count} passport photos ready at ${dpi} DPI!`, 'info');
+    generateBtn.disabled = false;
+    setStep(4);
+  });
+
+  // Reset
+  resetBtn.addEventListener('click', () => {
+    originalFile = null;
+    processedBlob = null;
+    originalImg.src = '';
+    resultImg.src = '';
+    uploadArea.style.display = 'flex';
+    originalWrap.style.display = 'none';
+    resultWrap.style.display = 'none';
+    resultPlaceholder.style.display = 'flex';
+    removeBgBtn.disabled = true;
+    generateBtn.disabled = true;
+    outputSection.classList.remove('show');
+    progressWrap.classList.remove('show');
+    fileInput.value = '';
+    hideStatus();
+    setStep(1);
+  });
+
+  function showStatus(msg, type) {
+    statusMsg.textContent = msg;
+    statusMsg.className = 'status-msg show ' + type;
+  }
+
+  function hideStatus() {
+    statusMsg.className = 'status-msg';
+  }
+</script>
+</body>
+</html>
