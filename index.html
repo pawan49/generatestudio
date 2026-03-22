@@ -1271,13 +1271,25 @@
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, wPx, hPx);
 
-    // Scale to fit maintaining aspect ratio
-    const scale = Math.min(wPx / srcImg.width, hPx / srcImg.height);
-    const sw = srcImg.width * scale;
-    const sh = srcImg.height * scale;
-    const sx = (wPx - sw) / 2;
-    const sy = (hPx - sh) / 2;
-    ctx.drawImage(srcImg, sx, sy, sw, sh);
+    // Passport-style framing: scale to COVER the slot (like object-fit: cover), then center-crop.
+    // "Contain" left huge margins and a tiny subject; cover fills the frame with head & shoulders.
+    const scale = Math.max(wPx / srcImg.width, hPx / srcImg.height);
+    let drawW = srcImg.width * scale;
+    let drawH = srcImg.height * scale;
+    let dx = (wPx - drawW) / 2;
+    let dy = (hPx - drawH) / 2;
+    // Bias crop slightly upward so faces sit higher in the frame (closer to ICAO-style head position).
+    if (drawH > hPx) {
+      const overflow = drawH - hPx;
+      dy += overflow * 0.14;
+      dy = Math.max(hPx - drawH, Math.min(0, dy));
+    }
+    if (drawW > wPx) {
+      const overflowX = drawW - wPx;
+      dx += overflowX * 0.02;
+      dx = Math.max(wPx - drawW, Math.min(0, dx));
+    }
+    ctx.drawImage(srcImg, dx, dy, drawW, drawH);
 
     // Preview sheet (scaled down for display — fits phone / tablet / desktop)
     const colsPreview = count <= 4 ? 2 : 3;
